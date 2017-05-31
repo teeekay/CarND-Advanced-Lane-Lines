@@ -44,7 +44,7 @@ Figure 2 shows a chessboard image as taken, with intrinsic camera distortion rem
 
 <u><i>Figure 3 Raw image from dashboard camera with straight road line markers</u></i>
 
-I applied the same process to correct the images from the dashboard camera like the one shown above in Figure 3.  I wrote a wrapper function `camera_undistort()` in the [AdvancedLaneLines.ipynb Jupyter notebook](https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/AdvancedLaneLines.ipynb) that removed the intrinsic distortion we measured on the chessboards from the dashcam images (assuming the same camera was used in both cases.)  The result is shown in Figure4:  I also placed a polyline on the image which represented a section of a lane with straight lines.
+I applied the same process to correct the images from the dashboard camera like the one shown above in Figure 3.  I wrote a wrapper function `camera_undistort()` in the [AdvancedLaneLines.ipynb Jupyter notebook](https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/AdvancedLaneLines.ipynb) that removed the intrinsic distortion we measured on the chessboards from the dashcam images (assuming the same camera was used in both cases.)  The result is shown in Figure4:
 
 ---
 
@@ -54,7 +54,7 @@ I applied the same process to correct the images from the dashboard camera like 
 
 ---
 
-I then wrote a wrapper function `undistort_crop()` which cropped the image for display purposes so that blank areas were not included in the final display image.  I did not apply this crop during the undistort stage, because I did not want to remove any information that could be used in other transformations (e.g. birdseye transformation).
+I then wrote a wrapper function `undistort_crop()` which used `cv2.warpPerspective()` to crop the image  for final display purposes so that blank areas were not included.  I did not apply this crop during the undistort stage, because I did not want to remove any information that might be useful in other transformations (e.g. birdseye transformation).
 
 ---
 
@@ -64,45 +64,48 @@ I then wrote a wrapper function `undistort_crop()` which cropped the image for d
 
 ---
 
+Using the image in figure 4 I found 4 co-ordinates  which represented a rectangular section of straight roadway.  These co-ordinates are shown with a polyline in figure 6.  I then wrote two wrapper functions `birdseye_transform()` and `birdseye_untransform()` to translate the image into a "birdseye" view from above and back again.  I decided to plot the birdseye image on a 720 x 1280 image to enable better visualization/discrimination of the roadway from above than in the 1280 x 720 format.  I carefully selected co-ordinates to transpose the identified image co-ordinates to in order that the straight road would be centered, would have a lane width of 200 pixels, and would only include minimal .  The source and destination co-ordinates are for the image transform are presented in Table 1 below and are outlined with a polyline in figures 6 (a) and (b)
 
-
-
-
-#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
-
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
-
-![alt text][image3]
-
-#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
-
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
-
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
-
-This resulted in the following source and destination points:
+---
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+| [617, 450]      | [260, 640]        | 
+| [711, 450]      | [460, 640]      |
+| [988, 626]     | [460, 1260]      |
+| [359, 626]      | [260, 1260]        |
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+<u><i>Table 1 Source and Destination co-ordinates for the Birdseye image transform</u></i>
 
-![alt text][image4]
+---
+
+|<img src="https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/output_images/undistorted_andpoly_straight_lines1.png?raw=true"  width=300>|<img src="https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/output_images/birdseye_straight_lines1.png?raw=true"  width=300>|
+|--|--|
+| (a) | (b) |
+
+<u><i>Figure 6 Birdseye Image Transformation - (a) Dashcam image (undistorted) with yellow polyline outlining source transform points, (b) Transformed birdseye view of road with new co-ordinates shown by yellow polyline</u></i>
+
+---
+
+
+#### 2. Image Thresholding
+
+I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.
+
+---
+
+|<img src="https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/output_images/sobel_mag_straight_lines1.png?raw=true"  width=300>|<img src="https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/output_images/combo_thresh_straight_lines1.png?raw=true"  width=300>|
+|--|--|
+| (a) | (b) |
+
+<u><i>Figure 7 Image thresholding applied to identify lane lines.  In (a) the image was processed using a custom sobel operation and thresholded, producing very good results.  in (b) the results of thresholding multiple color channels and sobel results were used to generate a single binary image with the lane lines extended almost the full length of the image</u></i>
+
+---
+
+sobel_mag_straight_lines1  
+
+
+
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
