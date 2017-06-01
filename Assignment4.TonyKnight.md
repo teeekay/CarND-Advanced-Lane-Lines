@@ -101,7 +101,7 @@ I used a combination of color and gradient thresholds to generate binary images 
 
 ---
 
-The thresholds were tested and developed in the [Image_Thresholding_Tests](./Image_thresholding_Tests.ipynb) notebook.
+The thresholds were tested and developed in the [Image_Thresholding_Tests](./Image_Thresholding_Tests.ipynb) notebook.
 
 The thresholds were applied in the `line_pipeline()` function (Code cell 6)  in the [AdvancedLaneLines](https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/AdvancedLaneLines.ipynb) Notebook. I used combinations of thresholds using BGR, HSV, HLS, YCrCb colorspaces and the sobel responses from the V channel of the HSV colorspace.
 
