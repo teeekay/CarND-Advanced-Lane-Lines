@@ -1,16 +1,15 @@
 ## **Advanced Lane Finding Project**
 
+---
+
+<img src="https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/output_images/video_snap.png?raw=true"  width=800>
+
+<i><u>Figure 1 Snapshot of Lanefinder Video</u></i>
+
+---
+
+
 ### Writeup by Tony Knight - 2017/05/15 
----
-
-insert image here
-
-<img src="https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/examples/warpedcalibration3.png?raw=true"  width=300>
-
-
-
-Figure 1
----
 
 
 ### Camera Calibration
@@ -90,7 +89,7 @@ Using the image in figure 4 I found 4 co-ordinates  which represented a rectangu
 
 #### 2. Image Thresholding
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.
+I used a combination of color and gradient thresholds to generate binary images to locate the lane lines.  Here's an example of outputs for this step.
 
 ---
 
@@ -102,14 +101,46 @@ I used a combination of color and gradient thresholds to generate a binary image
 
 ---
 
-sobel_mag_straight_lines1  
+The thresholds were applied in the `line_pipeline()` function in the `AdvancedLaneLines.ipynb` Notebook. I used combinations of thresholds using BGR, HSV, HLS, YCrCb colorspaces and the sobel responses from the V channel of the HSV colorspace.
+
+I wrote a wrapper function `sobel_thresh()` around the 'cv2.Sobel()' function to enable thresholding of results when using sobels in x direction, y direction, or when using magnitude of sobels or angle of sobel response.  After reading http://rvsn.csail.mit.edu/Pubs/phd_ashuang_2010feb_laneestimation.pdf I created a second specialized function which used a length 5 1st derivative sobel in the x direction, and a length 3 second derivative filter in the y direction (which should be close to zero if parallel to lane lines).  I did not find a way to used the sobel angle, as it was generally too noisy.
+
+The color channel thresholds generally worked by translating the image to a specific colorspace using the `cv2.cvtColor()` function, and then separating and thresholding each image.  I worked through the test images trying to determine the appropriate thresholds for each channel (where found to be useful).  I selected a combination of the following thresholds shown in Table 2 (using 8 bit integer space for color channels) .
+
+|parameter | criteria|
+|:----|:----:|
+| h from HSV |h>= 19 & h <=24 |
+| H, S, L from HSL | (17 < H < 45) and (L > 140) and (S > 80 while H <180) |
+| L from HSL | L > 220 |
+| Y from YCrCb |Y > 200 |
+| CR from YCrCb |142 > Cr < 170 |
+| Cb from YCrCb |30 > CB < 110 |
+| R, G, B from BGR | R > 225 and G > 180 and B < 170 |
+| sobel_mag | sobel_mag > 1750 |
+
+<b><i> Table 2: Criteria for thresholding Images </i></b>
 
 
 
 
-#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+#### 4.
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+After the birdseye road image has been thresholded, the binary image is sent to the `find_lines()` function which attempts to fit 2nd order polynomials to the right and left lane markers.  
+
+The birdseye image is flipped using `cv2.flip()` so that the y co-ordinates are zero at the front of the car and increase with distance forwards.  In this way the 3rd value 'C' of the polynomial equation we are trying to fit will represent the point the lines intersect the front of the car.  For the project video  we know that the lines are generally located near x=260 and x=460 at the front of the car, so this will allow a quick check of the validity of the polynomial fit.
+Y = Ax^2 + Bx + C
+
+If we are starting fresh, the algorithm sums the non zero pixels along the bottom 1/10th of the the binary image on the y-axis to provide a histogram of non zero pixels across the x axis. An example is shown on figure 8.  This allows us to position search windows to look for pixel
+
+---
+
+<img src="https://github.com/teeekay/CarND-Advanced-Lane-Lines/blob/master/output_images/histogram.png?raw=true"  width=300>
+
+<u><i>Figure 8 histogram of non-zero pixels across the x-axis used to locate the bottom of the lane lines</u></i>
+
+---
+
+
 
 ![alt text][image5]
 
@@ -127,8 +158,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 ### Pipeline (video)
 
-#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
-
+#### 1. 
 Here's a [link to my video result](./project_video.mp4)
 
 ---
